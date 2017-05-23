@@ -5,7 +5,7 @@ import json
 import os
 import sys
 import getopt
-
+import time
 # This is a set of function to call the triplexRNA,org database with sql query and json call, part of an internship
 # The goal of this funtions is to output data in a form usable for cytoscape, a logicial to represent graph from various output, here .sif
 # This output is a transformation of data to target the micro-RNAs involved in the most triplexes, which can be easely visuluable 
@@ -86,14 +86,15 @@ def print_help():
     
     print('\t This function, ' + os.path.basename(sys.argv[0]) + ', take as arguments:' + '\n')
     print('\t-help\t\t\tprint this help and exit')
-    print('\t-id_pathways id_pathways \tthe pathway to query')
+    print('\t-id_pathways id_pathways \tthe pathway id to query inside the sql table Pathways')
     print('\t-db_addr  DB_ADDR\tthe server\'s data-base address')
     print('\t-db_port  DB_PORT\tthe server\'s data-base port')
-    print('\t-user  DB_USER\tthe server\'s data-base user (mandatory)')
+    print('\t-user  DB_USER\t\tthe server\'s data-base user (mandatory)')
     print('\t-password  DB_PASS\tthe server\'s data-base password (mandatory)')
-    print('\t-name  DB_NAME\tthe server\'s data-base name (mandatory)')
+    print('\t-name  DB_NAME\t\tthe server\'s data-base name (mandatory)')
+    print('\t-bias_analysis BIAS \t initiate a different behavior, query all the genes and functionnal triplexes inside the sql pathways table, \n \t\t\t\t and output a .sif file, and exit. This option does not require arguments')
 
-    print('\n' + '\t' + 'Where db_addr and db_port have defaults values')
+    print('\n' + '\t' + 'Where db_addr and db_port and id_pathways have defaults values')
 
 
 def get_db():
@@ -336,7 +337,14 @@ if __name__ == '__main__':
     get_cli(sys.argv[1:])
     
     if config[BIAS] == True :
-        print "test is true"
+        
+        print "\t This option is an override of the normal behavior of the executable script"
+        print "\t In 60 secondes this executable will query all the triplexes inside the pathways table of the triplexRNA"
+        print "\t This query is about 1800 jason call, so it will take time"
+        print "\t This script will output a dedicated file call 'pathways biais' and will exit after, even with a pathways put as argument"
+        time.sleep(60) 
+        #main_biais_analysis()
+        sys.exit(2)
     
 
     
