@@ -343,7 +343,7 @@ if __name__ == '__main__':
         print "\t This query is about 1800 jason call, so it will take time"
         print "\t This script will output a dedicated file call 'pathways biais' and will exit after, even with a pathways put as argument"
         time.sleep(60) 
-        #main_biais_analysis()
+        main_biais_analysis()
         sys.exit(2)
     
 
