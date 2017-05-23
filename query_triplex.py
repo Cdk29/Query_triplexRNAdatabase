@@ -11,7 +11,6 @@ import getopt
 # This output is a transformation of data to target the micro-RNAs involved in the most triplexes, which can be easely visuluable 
 
 
-#select miR1_name, miR2_name, triplexes from pathways where pathways.id="hsa05218" limit 10
 config = {}
 DB_ADDR="address"
 DB_PORT="port"
@@ -24,6 +23,7 @@ DEFAULT_DB_PORT=3306
 DEFAULT_PATHWAYS="hsa05218"
 
 id_pathways="pathways_in_triplex"
+BIAS='bias'
 
 
 def get_cli(argv):
@@ -40,7 +40,7 @@ def get_cli(argv):
     id_pathways=DEFAULT_PATHWAYS
 
     try:
-        opts, args = getopt.getopt(argv, "hi:d:b:u:p:n:", ['help', 'id-pathways=', 'db-addr=', 'db-port=', 'user=', 'password=', 'name='])
+        opts, args = getopt.getopt(argv, "hi:d:b:u:p:n:a", ['help', 'id-pathways=', 'db-addr=', 'db-port=', 'user=', 'password=', 'name=', 'bias_analysis'])
     except getopt.GetoptError as err:
         print_help()
         print str(err)
@@ -64,13 +64,13 @@ def get_cli(argv):
             config[DB_PASS] = arg
         elif opt in ('-n', '--name'):
             config[DB_NAME] = arg
-
-
-
+        elif opt in ('-a', '--bias_analysis'):
+            config[BIAS] = True
+            
     # check wether or not all mandatory parameters have been provided
     if ( (DB_USER not in config.keys())
         or (DB_PASS not in config.keys())
-        or (DB_NAME not in config.keys()) ):
+        or (DB_NAME not in config.keys())):
         print_help()
         print "key missing"
         print config 
@@ -82,7 +82,7 @@ def get_cli(argv):
 
 def print_help():
     
-    #Prints the usage.
+    #Prints the help/usage
     
     print('\t This function, ' + os.path.basename(sys.argv[0]) + ', take as arguments:' + '\n')
     print('\t-help\t\t\tprint this help and exit')
@@ -334,6 +334,12 @@ if __name__ == '__main__':
     
     reload(sys)
     get_cli(sys.argv[1:])
+    
+    if config[BIAS] == True :
+        print "test is true"
+    
+
+    
     if not os.path.exists("Output_files_of_the_triplexdatabase_query"):
         os.mkdir("Output_files_of_the_triplexdatabase_query")
     os.chdir("Output_files_of_the_triplexdatabase_query")
