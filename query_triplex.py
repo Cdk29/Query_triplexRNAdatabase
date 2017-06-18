@@ -129,12 +129,6 @@ def request_pathways_component(id_pathways):
         
     return data
 
-def merging_micro_RNA():
-    #miRNAs with nearly identical sequences except for one or two nucleotides are
-    #annotated with an additional lower case letter. For example, miR-124a is closely related to miR-124b.
-    #the goal of the function is to regroup them under one name for the further graph construction
-    
-    return 
 
 
 
@@ -169,18 +163,18 @@ def write_sif_output(gene, string):
     return 
 
 
-def write_rapport_ouput(set_of_genes):
+def write_rapport_ouput(set_of_genes, id_pathways):
     #here is the printing function for the global output of the sfi test creation, number of genes, etc
     string=""
     list_gene=""    
-    string="Genes present in the melanoma pathways - from the triplex RNA database, id_pathways=hsa05218 - are :" 
+    string="Genes present in the pathways " + str(id_pathways) + "- from the triplex RNA database, id_pathways=" + str(id_pathways) + "- are :" 
     i=0
     for gene in set_of_genes :
         list_gene="\n"+gene+list_gene
         i=i+1
     string="There is " + str(i) + " genes in this particular pathway" + list_gene
     
-    fichier = open("global_report_melanoma_pathways.txt", "w")
+    fichier = open("global_report_pathways_" + str(id_pathways) +".txt", "w")
     fichier.write(string)
     fichier.close()
     
@@ -354,7 +348,7 @@ if __name__ == '__main__':
     results=request_pathways_component(id_pathways)       
     set_of_genes=set()
     set_of_genes=gene_reader_sql_output(results, 3)
-    write_rapport_ouput(set_of_genes)
+    write_rapport_ouput(set_of_genes, id_pathways)
 
     
     add_header_output("Genes and the number of their triplexes")   
@@ -376,7 +370,7 @@ if __name__ == '__main__':
         list_of_genes_without_triplexes=output_manager(string, gene, count_of_triplex, list_of_genes_without_triplexes) 
         
                 
-    write_sif_output("melanoma_pathway", triplexes_whole_pathways)
+    write_sif_output(str(id_pathways)+"_whole_triplexes", triplexes_whole_pathways)
 
     gene_without_triplexes_reporter(list_of_genes_without_triplexes)
     
