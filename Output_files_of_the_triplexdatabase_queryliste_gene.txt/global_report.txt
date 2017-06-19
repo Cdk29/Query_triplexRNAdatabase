@@ -1,0 +1,8 @@
+There is 3 genes in this particular pathway
+CDKN1A
+CDKN1B
+CDKN1C
+Genes and the number of their triplexes
+CDKN1C : 56
+CDKN1B : 54
+CDKN1A : 7

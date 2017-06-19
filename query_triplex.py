@@ -5,6 +5,7 @@ import json
 import os
 import sys
 import getopt
+import shutil
 
 # This is a set of function to call the triplexRNA,org database with sql query and json call, part of an internship
 # The goal of this funtions is to output data in a form usable for cytoscape, a logicial to represent graph from various output, here .sif
@@ -20,10 +21,8 @@ DB_NAME="name"
 
 DEFAULT_SERVER_ADDR="localhost"
 DEFAULT_DB_PORT=3306
-DEFAULT_PATHWAYS="hsa05218"
 
-id_pathways="pathways_in_triplex"
-
+liste_of_genes=".txt"
 
 
 def get_cli(argv):
@@ -31,16 +30,16 @@ def get_cli(argv):
     Parses the command line, returning the mandatory parameters.
     """
     global config
-    global id_pathways
-
+    global liste_of_genes
+    
     # assign defult configurations (might be overwritten while
     # parsing the provided cli options)
     config[DB_ADDR] = DEFAULT_SERVER_ADDR
     config[DB_PORT] = DEFAULT_DB_PORT
-    id_pathways=DEFAULT_PATHWAYS
+
 
     try:
-        opts, args = getopt.getopt(argv, "hi:d:b:u:p:n:a", ['help', 'id_pathways=', 'db-addr=', 'db-port=', 'user=', 'password=', 'name='])
+        opts, args = getopt.getopt(argv, "hi:d:b:u:p:n:a", ['help', 'liste_of_genes=', 'db-addr=', 'db-port=', 'user=', 'password=', 'name='])
     except getopt.GetoptError as err:
         print_help()
         print str(err)
@@ -52,8 +51,8 @@ def get_cli(argv):
         if opt in ('-h', '--help'):
             print_help()
             sys.exit(0)
-        elif opt in ( '-i', '--id_pathways'):
-            id_pathways = arg
+        elif opt in ( '-l', '--liste_of_genes'):
+            liste_of_genes = arg
         elif opt in ('-d', '--db_addr'):
             config[DB_ADDR] = arg
         elif opt in ('-b', '--db_port'):
@@ -84,14 +83,14 @@ def print_help():
     
     print('\t This function, ' + os.path.basename(sys.argv[0]) + ', take as arguments:' + '\n')
     print('\t-h | --help\t\t\tprint this help and exit')
-    print('\t-i  | --id_pathways id_pathways \tthe pathway id to query inside the sql table Pathways')
+    print('\t-l  | --liste_of_genes liste_of_genes= \tthe name of the file with the genes to query. One gene name by line')
     print('\t-d  | -db_addr  DB_ADDR\tthe server\'s data-base address')
     print('\t-b  | -db_port  DB_PORT\tthe server\'s data-base port')
     print('\t-u  | --user  DB_USER\t\tthe server\'s data-base user (mandatory)')
     print('\t-p  | -password  DB_PASS\tthe server\'s data-base password (mandatory)')
     print('\t-n  | -name  DB_NAME\t\tthe server\'s data-base name (mandatory)')
 
-    print('\n' + '\t' + 'Where db_addr and db_port and id_pathways have defaults values')
+    print('\n' + '\t' + 'Where db_addr and db_port have defaults values')
 
 
 def get_db():
@@ -160,18 +159,18 @@ def write_sif_output(gene, string):
     return 
 
 
-def write_rapport_ouput(set_of_genes, id_pathways):
+def write_rapport_ouput(set_of_genes):
     #here is the printing function for the global output of the sfi test creation, number of genes, etc
     string=""
     list_gene=""    
-    string="Genes present in the pathways " + str(id_pathways) + "- from the triplex RNA database, id_pathways=" + str(id_pathways) + "- are :" 
+    string="Genes present in list of genes:" 
     i=0
     for gene in set_of_genes :
         list_gene="\n"+gene+list_gene
         i=i+1
     string="There is " + str(i) + " genes in this particular pathway" + list_gene
     
-    fichier = open("global_report_pathways_" + str(id_pathways) +".txt", "w")
+    fichier = open("global_report.txt", "w")
     fichier.write(string)
     fichier.close()
     
@@ -181,7 +180,7 @@ def write_rapport_ouput(set_of_genes, id_pathways):
 def add_rapport_output(gene, count_of_triplexes):
     #addition to the outputfile the number of triplex per genes 
     string="\n" + str(gene) + " : " +str(count_of_triplexes)
-    fichier = open("global_report_melanoma_pathways.txt", "a")
+    fichier = open("global_report.txt", "a")
     fichier.write(string)
     fichier.close()    
     
@@ -191,7 +190,7 @@ def add_rapport_output(gene, count_of_triplexes):
 def add_header_output(header):
     #addition to the outputfile the number of triplex per genes 
     string="\n"+ header
-    fichier = open("global_report_melanoma_pathways.txt", "a")
+    fichier = open("global_report.txt", "a")
     fichier.write(string)
     fichier.close()    
     
@@ -211,76 +210,6 @@ def pattern_control_for_count(pattern, count_of_triplex):
         return count_of_triplex 
 
 
-def functionnal_triplexes_pathway_table(set_of_genes):
-    count_of_triplex=0
-    triplexes_whole_pathways=""
-    for gene in set_of_genes :
-        json_gene=jasoooooon(gene)
-        for dictionnary in json_gene :
-            micro_RNA1 = dictionnary['miRNA1 ID']
-            micro_RNA2 = dictionnary['miRNA2 ID']
-            #micro_RNA1 = merging_micro_RNA(micro_RNA1)
-            #micro_RNA2 = merging_micro_RNA(micro_RNA2)
-            triplexe = dictionnary['Triplex ID']
-            pattern = dictionnary['Pattern']
-            triplexes_whole_pathways = triplex_pattern_control(pattern, micro_RNA1, micro_RNA2, triplexe, triplexes_whole_pathways)
-            count_of_triplex = pattern_control_for_count(pattern, count_of_triplex)
-
-
-    write_sif_output("pathway_biais", triplexes_whole_pathways)
-    print count_of_triplex
-    return 
-
-
-
-def request_all_genes():
-    #this function request everything in the target column of the table pathways
-    #the main purpose of it is to query every single genes
-    #this will be used to query every functionnal triplexes, to further estimate the enrichment biais in the triplexe database
-    #i.e. to compare the enrichment biais of the base to the triplexes composition of a genes
-    
-    query = "select targets from pathways"
-
-    db = get_db()
-    cursor = db.cursor()
-
-    try:
-        cursor.execute(query)
-        data = cursor.fetchall()      
-    except:
-        print "error"
-         
-    cursor.close()
-    db.close()
-        
-    return data
-
-
-def gene_reader_sql_output(results, column):
-    #column in the number of the column to lok for genes in the result
-    set_of_genes=set()
-    for result in results :
-
-        genes=result[column]
-
-        if "/" in genes:
-            genes = genes.split("/")
-            for gene in genes:
-                set_of_genes.add(gene)
-        else:
-            set_of_genes.add(genes)
-
-    return set_of_genes
-
-def main_biais_analysis():
-    result = request_all_genes()
-    set_of_genes=gene_reader_sql_output(result,0)
-
-
-    #len(set_of_genes)
-    #1851
-    functionnal_triplexes_pathway_table(set_of_genes)
-    return 
 
 def json_read(dictionnary):
     
@@ -327,18 +256,28 @@ if __name__ == '__main__':
     reload(sys)
     get_cli(sys.argv[1:])
 
-    
-    if not os.path.exists("Output_files_of_the_triplexdatabase_query" + str(id_pathways)):
-        os.mkdir("Output_files_of_the_triplexdatabase_query" + str(id_pathways))
-    os.chdir("Output_files_of_the_triplexdatabase_query" + str(id_pathways))
-    results=request_pathways_component(id_pathways)       
+    filin =open(liste_of_genes)
     set_of_genes=set()
-    set_of_genes=gene_reader_sql_output(results, 3)
-    write_rapport_ouput(set_of_genes, id_pathways)
+    lines=filin.readlines()
+    
+    if os.path.exists("Output_files_of_the_triplexdatabase_query" + str(liste_of_genes)):
+    
+        shutil.rmtree("Output_files_of_the_triplexdatabase_query" + str(liste_of_genes))
+    if not os.path.exists("Output_files_of_the_triplexdatabase_query" + str(liste_of_genes)):
+        os.mkdir("Output_files_of_the_triplexdatabase_query" + str(liste_of_genes))
+   
+    os.chdir("Output_files_of_the_triplexdatabase_query" + str(liste_of_genes))
+    
+
+    for line in lines :
+        line=line.replace("\n", "")
+        set_of_genes.add(line)
+    
+    write_rapport_ouput(set_of_genes)
 
     
     add_header_output("Genes and the number of their triplexes")   
-    triplexes_whole_pathways=""   #string for output a sif file for the all pathway
+    triplexes_whole_list_of_gene=""   #string for output a sif file for the all query
     
     for gene in set_of_genes :
         json_gene=jasoooooon(gene)
@@ -349,14 +288,14 @@ if __name__ == '__main__':
         for dictionnary in json_gene :
             micro_RNA1, micro_RNA2, triplexe, pattern=json_read(dictionnary)
             string = triplex_pattern_control(pattern, micro_RNA1, micro_RNA2, triplexe, string)
-            triplexes_whole_pathways = triplex_pattern_control(pattern, micro_RNA1, micro_RNA2, triplexe, triplexes_whole_pathways)
+            triplexes_whole_list_of_gene = triplex_pattern_control(pattern, micro_RNA1, micro_RNA2, triplexe, triplexes_whole_list_of_gene)
             count_of_triplex = pattern_control_for_count(pattern, count_of_triplex)
         
         #the following function do more behing the door than the return suggest
         list_of_genes_without_triplexes=output_manager(string, gene, count_of_triplex, list_of_genes_without_triplexes) 
         
                 
-    write_sif_output(str(id_pathways)+"_whole_triplexes", triplexes_whole_pathways)
+    write_sif_output(liste_of_genes +"_whole_triplexes", triplexes_whole_list_of_gene)
 
     gene_without_triplexes_reporter(list_of_genes_without_triplexes)
     
