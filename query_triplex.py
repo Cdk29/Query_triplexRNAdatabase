@@ -39,7 +39,7 @@ def get_cli(argv):
 
 
     try:
-        opts, args = getopt.getopt(argv, "hi:d:b:u:p:n:a", ['help', 'liste_of_genes=', 'db-addr=', 'db-port=', 'user=', 'password=', 'name='])
+        opts, args = getopt.getopt(argv, "hl:d:b:u:p:n:a", ['help', 'liste_of_genes=', 'db-addr=', 'db-port=', 'user=', 'password=', 'name='])
     except getopt.GetoptError as err:
         print_help()
         print str(err)
