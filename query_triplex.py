@@ -127,21 +127,6 @@ def request_pathways_component(id_pathways):
 
 
 
-
-def triplex_pattern_control(pattern, micro_RNA1, micro_RNA2, triplexe, string):
-    #the goal here is to filter the triplexes based on the workflow of the triplex database
-    #if the seed binding parameter is equal to yes, that's mean that both micro-RNAs are binding and exert a cooperative repression,
-    #according to the simulation of the workflow which the RNA database is based on
-    
-    #here I take the seed binding parameter, but the triplexe pattern can also be taken
-    
-    if pattern == "canonical triplex":
-            string= string + micro_RNA1 + " " + triplexe + " " + micro_RNA2 + "\n"
-
-
-    return string
-
-
 def jasoooooon(gene):
     print gene
     response = requests.get("http://www.sbi.uni-rostock.de/triplexrna/JSON/Human/gene/" + gene )
@@ -251,6 +236,78 @@ def gene_without_triplexes_reporter(list_of_genes_without_triplexes):
 
 
 
+
+def request_position_triplexes(id_triplex):
+    
+    #this request the positions of start and end for the two microRNAs binding site for one triplexe
+    #the purpose is to filter out the triplexes with the exact same position (provocked by microRNAs of the same familly)
+    #this filtering is to avoid an over-estimation of the triplexes that the micro-RNA contribute to
+
+    query = "select gene_start1, gene_end1, gene_start2, gene_end2 from triplets where id=%(s1)s"
+    
+    db = get_db()
+    cursor = db.cursor()
+
+    try:
+        cursor.execute(query, {"s1":id_triplex})
+        data = cursor.fetchall()      
+    except:
+        print "error"
+         
+    cursor.close()
+    db.close()
+
+
+    return data
+
+def request_id_same_position(gene_start1, gene_end1, gene_start2, gene_end2, micro_RNA1, micro_RNA2,):
+    
+    #prolongation of the previous fonction for filtering, now we look for triplexes to filter
+    
+    query ="select id from triplets where (gene_start1=" + str(gene_start1) + " or gene_end2=" + str(gene_end1) + ") and (gene_start2=" + str(gene_start2) + " or gene_end2=" + str(gene_end2) + ') and (miR1_name="' + str(micro_RNA1) + '" or mir2_name="' + str(micro_RNA2) +'");'
+       
+    db = get_db()
+    cursor = db.cursor()
+
+    try:
+        cursor.execute(query)
+        data = cursor.fetchall()      
+    except:
+        print "error"
+         
+    cursor.close()
+    db.close()
+    return data
+
+
+
+def triplex_pattern_control(pattern, micro_RNA1, micro_RNA2, triplexe, string):
+    #the goal here is to filter the triplexes based on the workflow of the triplex database
+    #if the seed binding parameter is equal to yes, that's mean that both micro-RNAs are binding and exert a cooperative repression,
+    #according to the simulation of the workflow which the RNA database is based on
+    
+    if pattern == "canonical triplex":
+        #string = string + micro_RNA1 + " " + triplexe + " " + micro_RNA2 + "\n"            
+               
+        if int(triplexe) in list_of_filtering :
+            string=string
+        else :
+            string = string + micro_RNA1 + " " + triplexe + " " + micro_RNA2 + "\n"
+        data=request_position_triplexes(id_triplex=triplexe)
+
+        ids_redondant_triplexes=request_id_same_position(int(data[0][0]), int(data[0][1]), int(data[0][2]), int(data[0][3]), micro_RNA1, micro_RNA2)
+        for ids in ids_redondant_triplexes:
+            holder=int(ids[0])
+            list_of_filtering.append(holder)
+ 
+
+
+    return string
+
+
+
+
+
 if __name__ == '__main__':
     
     reload(sys)
@@ -280,6 +337,10 @@ if __name__ == '__main__':
     triplexes_whole_list_of_gene=""   #string for output a sif file for the all query
     
     for gene in set_of_genes :
+        
+        global list_of_filtering
+        list_of_filtering=[]
+        
         json_gene=jasoooooon(gene)
         list_of_genes_without_triplexes=[]
         
@@ -288,7 +349,7 @@ if __name__ == '__main__':
         for dictionnary in json_gene :
             micro_RNA1, micro_RNA2, triplexe, pattern=json_read(dictionnary)
             string = triplex_pattern_control(pattern, micro_RNA1, micro_RNA2, triplexe, string)
-            triplexes_whole_list_of_gene = triplex_pattern_control(pattern, micro_RNA1, micro_RNA2, triplexe, triplexes_whole_list_of_gene)
+            triplexes_whole_list_of_gene = triplex_pattern_control(pattern, micro_RNA1, micro_RNA2, triplexe, triplexes_whole_list_of_gene)  #filter also redondant triplexes
             count_of_triplex = pattern_control_for_count(pattern, count_of_triplex)
         
         #the following function do more behing the door than the return suggest
@@ -298,22 +359,6 @@ if __name__ == '__main__':
     write_sif_output(liste_of_genes +"_whole_triplexes", triplexes_whole_list_of_gene)
 
     gene_without_triplexes_reporter(list_of_genes_without_triplexes)
-    
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
