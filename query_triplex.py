@@ -264,7 +264,7 @@ def request_id_same_position(gene_start1, gene_end1, gene_start2, gene_end2, mic
     
     #prolongation of the previous fonction for filtering, now we look for triplexes to filter
     
-    query ="select id from triplets where (gene_start1=" + str(gene_start1) + " or gene_end2=" + str(gene_end1) + ") and (gene_start2=" + str(gene_start2) + " or gene_end2=" + str(gene_end2) + ') and (miR1_name="' + str(micro_RNA1) + '" or mir2_name="' + str(micro_RNA2) +'");'
+    query ="select id from triplets where (gene_start1=" + str(gene_start1) + " or gene_end1=" + str(gene_end1) + ") and (gene_start2=" + str(gene_start2) + " or gene_end2=" + str(gene_end2) + ') and (miR1_name="' + str(micro_RNA1) + '" or mir2_name="' + str(micro_RNA2) +'");'
        
     db = get_db()
     cursor = db.cursor()
