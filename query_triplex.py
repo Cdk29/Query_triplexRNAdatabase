@@ -356,7 +356,7 @@ if __name__ == '__main__':
         list_of_genes_without_triplexes=output_manager(string, gene, count_of_triplex, list_of_genes_without_triplexes) 
         
                 
-    write_sif_output(liste_of_genes +"_whole_triplexes", triplexes_whole_list_of_gene)
+    write_sif_output(liste_of_genes, triplexes_whole_list_of_gene)
 
     gene_without_triplexes_reporter(list_of_genes_without_triplexes)
 
