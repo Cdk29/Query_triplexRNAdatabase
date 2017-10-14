@@ -1,4 +1,4 @@
-# Circular RNA design
+# Query Triplex
 
 This script is part of a workflow developped at the Systems Biology and Bioinformatics department, Universität Rostock, as an extension of the TriplexRNA database, https://triplexrna.org/, a database of cooperating microRNAs and their mutual target.
 
